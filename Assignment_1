@@ -1,0 +1,106 @@
+#include <stdio.h>
+#include <string.h>
+
+int main()
+{
+    double T[4][4]={{0.5,0.2,0.1,0.2},{0.1,0.7,0.1,0.1},{0.1,0.2,0.3,0.4},{0.1,0.2,0.2,0.5}}; //transition matrix
+    double P[3][4][4]={{{0,0,0,0},{0,0,0,0},{0,0,0,0},{0,0,0,0}},{{0,0,0,0},{0,0,0,0},{0,0,0,0},{0,0,0,0}},{{0,0,0,0},{0,0,0,0},{0,0,0,0},{0,0,0,0}}};  //宣告3種4*4的陣列,做為transition matrix n次方後的矩陣
+    double identity[4][4]={{1,0,0,0},{0,1,0,0},{0,0,1,0},{0,0,0,1}};  //4*4單位矩陣
+    double temp[4][4]; //暫存
+    double first[4]={0.2,0.4,0.3,0.1}; //The probability of the first day’s sales level
+    double n_day[3][4]={{0,0,0,0},{0,0,0,0},{0,0,0,0}}; //3種宣告n天後的P
+    double  profits[4]={3,5,8,12};
+    int times=10,d=-1; //transition matrix要乘的次數,第d個矩陣
+    for(int x=0;x<3;x++) //三種天數 跑三次
+    {times*=10;  //每次*10
+    d++;  //存到下一個4*4矩陣
+    for(int a=0;a<times;a++) //transition matrix n-1次方
+    {if(a!=0) 
+        for(int j=0;j<4;j++)
+            for(int k=0;k<4;k++)
+                {temp[j][k]= P[d][j][k];
+                  P[d][j][k]=0;} //把P存到temp 清0 
+      else
+        for(int j=0;j<4;j++)
+              for(int k=0;k<4;k++)
+                temp[j][k]= identity[j][k]; //第一次 temp為單位矩陣 
+      for(int i=0;i<4;i++) 
+        for(int j=0;j<4;j++)
+          for(int k=0;k<4;k++)
+           P[d][i][j]+=temp[i][k]*T[k][j];//矩陣相乘 (temp乘上transition matrix temp為transition matrix已乘a-1次的矩陣) 
+    }
+    for(int i=0;i<4;i++)
+            for(int j=0;j<4;j++)
+                 n_day[d][i]+=first[j]*P[d][j][i]; //n天後的P為第一天的P乘上n次方的transition matrix
+      
+    printf("%d days : [",times);
+    for(int i=0;i<4;i++)
+    {if(i==0)
+        printf("%f",n_day[d][i]);
+      else
+        printf(" %f",n_day[d][i]);}
+    printf("] \n");
+    }//印
+  
+  
+  //穩定
+    double found_pi[4][4]={{0,0,0,0},{0,0,0,0},{0,0,0,0},{0,0,0,0}};//找pi用的4*4陣列
+    double pi[4]={0,0,0,0};
+    int s;
+    for(int a=0;;a++)
+    {s=1;
+      if(a!=0) 
+        for(int j=0;j<4;j++)
+            for(int k=0;k<4;k++)
+                {
+                  if(temp[j][k]-found_pi[j][k]>0||found_pi[j][k]-temp[j][k]>0) 
+                    s++;   //上一天跟下一天的矩陣不一樣 還未達穩定 s++
+                  temp[j][k]= found_pi[j][k];
+                  found_pi[j][k]=0;
+                } //把P存到temp 清0  
+      else
+      {
+        s++;        
+        for(int j=0;j<4;j++)
+              for(int k=0;k<4;k++)
+                temp[j][k]= identity[j][k]; //第一次 temp為單位矩陣
+      }
+        
+ 
+      for(int i=0;i<4;i++) 
+        for(int j=0;j<4;j++)
+          for(int k=0;k<4;k++)
+           found_pi[i][j]+=temp[i][k]*T[k][j];//矩陣相乘 (temp乘上transition matrix temp為transition matrix已乘a-1次的矩陣) 
+
+    if(s==1) //s=1表示上一天跟下一天的矩陣一樣 達穩定
+      {printf("%d 天後達穩定 : [",a);
+        break;}
+    } 
+    for(int i=0;i<4;i++)
+        for(int j=0;j<4;j++)
+            pi[i]+=first[j]*found_pi[j][i]; //n天後的P為第一天的P乘上n次方的transition matrix
+    for(int i=0;i<4;i++)
+    {if(i==0)
+        printf("%f",pi[i]);
+      else
+        printf(" %f",pi[i]);}
+    printf("] \n");
+
+  //第二題
+  int x=10;
+  double profit=0;
+  for(int i=0;i<3;i++)
+    {profit=0;
+      x*=10;
+    for(int j=0;j<4;j++)
+        profit+=n_day[i][j]*profits[j];   
+      printf("%d天後實際利潤 : %f\n",x,profit);}
+  profit=0;
+  for(int i=0;i<4;i++)
+        profit+=pi[i]*profits[i];  
+  printf("理論利潤 : %f\n",profit); //就這樣
+    
+  
+  
+    return 0;
+}
